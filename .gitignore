@@ -1,0 +1,97 @@
+#
+# -- common
+#
+#
+# editor
+#
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.code-workspace
+#
+# OS
+#
+.DS_Store
+Thumbs.db
+Desktop.ini
+._*
+#
+# .env
+#
+.env
+.env.*.local
+#
+# other
+#
+tmp
+#
+# -- TypeScript
+#
+*.tsbuildinfo
+node_modules
+.pnp
+.pnp.js
+.pnpm-store
+#
+# build output
+#
+lib
+dist
+dist-ssr
+#
+# Next.js
+#
+.next/
+/out/
+next-env.d.ts
+#
+# Vercel
+#
+.vercel
+#
+# monorepo
+#
+.turbo
+#
+# vitepress
+#
+docs/.vitepress/cache
+docs/.vitepress/dist
+#
+# test
+#
+coverage
+.nyc_output
+#
+# logs
+#
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+#
+# Storybook
+#
+*storybook.log
+storybook-static
+#
+# Tanstack Start
+#
+count.txt
+.nitro
+.tanstack
+.wrangler
+.output
+.vinxi
+todos.json
+__unconfig*
+#
+# Astro
+#
+.astro/

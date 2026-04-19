@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "skills": {
+    "TypeScript": {
+      "source": "zgid123/skills",
+      "sourceType": "github",
+      "computedHash": "a5c7756a549d5e41374dfb1cb5e7b0ad5984a69963ca8f25c70f3a5b561203b5"
+    },
+    "Unit, Integration and E2E testing": {
+      "source": "zgid123/skills",
+      "sourceType": "github",
+      "computedHash": "8201539061750aec3e6821a5933656597a6cc477eb20fcbfc76c0d33ac42f52b"
+    },
+    "testing": {
+      "source": "zgid123/skills",
+      "sourceType": "github",
+      "skillPath": "skills/testing/SKILL.md",
+      "computedHash": "37d07a193bfce8f05c54350c3f519132ab36cad38337db176e00950e44cdca32"
+    },
+    "typescript": {
+      "source": "zgid123/skills",
+      "sourceType": "github",
+      "skillPath": "skills/typescript/SKILL.md",
+      "computedHash": "bd4723d34a96312ceefc63c68932ba54f19b435e39d05e5fa42c4e698153efba"
+    }
+  }
+}

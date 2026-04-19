@@ -1,0 +1,12 @@
+pre-commit:
+  commands:
+    format:
+      glob: '*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}'
+      priority: 1
+      run: pnpm exec oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+    lint:
+      glob: '*.{js,ts,cjs,mjs,cts,mts,jsx,tsx}'
+      priority: 2
+      run: pnpm exec oxlint --fix --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true

@@ -1,0 +1,41 @@
+{
+  "name": "morphos",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "A serializer for creating view models",
+  "author": "Alpha",
+  "keywords": [
+    "serializer",
+    "morphos"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "clear": "pnpm -r exec rimraf node_modules dist .turbo lib && pnpm rimraf node_modules .turbo",
+    "update-packages": "pnpm update -i -r --latest",
+    "build": "turbo run build",
+    "release": "pnpm build && changeset version && pnpm publish -r",
+    "set-release": "changeset"
+  },
+  "packageManager": "pnpm@11.1.2",
+  "devDependencies": {
+    "@alphacifer/oxc": "^0.0.1",
+    "@alphacifer/tsconfig": "^0.0.16",
+    "@changesets/changelog-github": "0.7.0",
+    "@changesets/cli": "2.31.1",
+    "@vitest/coverage-istanbul": "4.1.10",
+    "changeset": "0.2.6",
+    "lefthook": "2.1.10",
+    "oxfmt": "0.61.0",
+    "oxlint": "1.76.0",
+    "rimraf": "6.1.3",
+    "tsdown": "0.22.14",
+    "turbo": "2.10.8",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  },
+  "dependencies": {
+    "tslib": "2.8.1"
+  }
+}
