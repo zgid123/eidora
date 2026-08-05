@@ -3,7 +3,7 @@
   "changelog": [
     "@changesets/changelog-github",
     {
-      "repo": "zgid123/morphos"
+      "repo": "zgid123/eidora"
     }
   ],
   "commit": true,

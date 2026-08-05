@@ -1,4 +1,4 @@
-import { Field, Serializer, ViewModel } from '@morphos/core';
+import { Field, Serializer, ViewModel } from '@eidora/core';
 
 interface IUser {
   readonly id: string;
