@@ -1,40 +1,50 @@
-# Morphos
+# Eidora
 
-Morphos is a TypeScript serializer for projecting application data into small,
-explicit view-model objects. Its decorator-based schemas make the output shape
-easy to read while preventing undeclared properties, such as credentials or
-internal state, from leaking into serialized results.
+**Eidora** (**/aɪˈdɔː.rə/**, **eye-DOOR-ah**) is a coined name inspired by the
+Ancient Greek **εἶδος** (_eidos_), meaning _form_, _appearance_, or
+_representation_. For this project, **Eidora** means **the form in which an
+object is presented**.
 
-## Packages
+Eidora is a type-safe, decorator-driven serializer for TypeScript. It projects
+domain objects into explicit view models, giving each use case the data shape it
+needs without mutating the source or exposing undeclared fields.
 
-| Package                            | Description                                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`@morphos/core`](./packages/core) | View-model decorators, field mapping, serialization context, and recursive key transforms. |
+A domain model can have many valid representations: a public response, an admin
+view, or a context-specific payload. Eidora lets you define each representation
+as a small schema and serialize the same object into the appropriate form while
+the domain model stays unchanged.
 
-Adapter packages for schema and validation libraries are planned under
-`packages/@adapters`.
+## Features
+
+- Explicit field allowlists through decorators
+- Renamed and computed output fields
+- Read-only context for request-specific mapping
+- Recursive `camel`, `pascal`, and `snake` key transforms
+- Plain-object output with no schema construction or source mutation
+- Strongly typed schema results
 
 ## Quick Start
 
 Install the core package:
 
 ```sh
-pnpm add @morphos/core
+pnpm add @eidora/core
 ```
 
-Define a view model and serialize an object:
+Define the representation you want to expose:
 
 ```ts
-import { Field, Serializer, ViewModel } from '@morphos/core';
+import { Field, Serializer, ViewModel } from '@eidora/core';
 
 interface IUser {
   readonly id: string;
   name: string;
-  password: string;
+  email: string;
+  passwordHash: string;
 }
 
 @ViewModel()
-class UserViewModel {
+class PublicUser {
   @Field
   id!: string;
 
@@ -42,51 +52,62 @@ class UserViewModel {
   name!: string;
 }
 
-const result = new Serializer().serialize(
-  {
-    id: 'user-1',
-    name: 'Alpha',
-    password: 'secret',
-  },
-  { schema: UserViewModel },
-);
+const user: IUser = {
+  id: 'user-1',
+  name: 'Alpha',
+  email: 'alpha@example.com',
+  passwordHash: 'private',
+};
+
+const result = new Serializer().serialize(user, {
+  schema: PublicUser,
+});
 
 // { id: 'user-1', displayName: 'Alpha' }
 ```
 
-Only fields marked with `@Field` are included. The result is typed as
-`UserViewModel`, but is a plain object at runtime.
+Only fields marked with `@Field` appear in the result. Sensitive or internal
+properties remain excluded unless a schema explicitly exposes them. The result
+is typed as `PublicUser`, but remains a plain object at runtime.
 
-See the [`@morphos/core` README](./packages/core/README.md) for field mapping,
-serialization context, key transforms, API details, and limitations.
+See the [`@eidora/core` documentation](./packages/core/README.md) for computed
+fields, serialization context, key transforms, API details, and current
+limitations.
 
-## Repository Structure
+## Packages
+
+| Package                           | Description                                                                                |
+| --------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`@eidora/core`](./packages/core) | View-model decorators, field mapping, serialization context, and recursive key transforms. |
+
+Adapters for external schema and validation libraries are planned under
+`packages/@adapters`.
+
+## Repository
 
 ```text
 packages/core/       Core serializer package
 packages/@adapters/  External library adapters
 samples/             Buildable usage examples
-specs/               Numbered technical specifications
+specs/               Technical specifications and design decisions
 ```
 
-The first design specification is
-[`0001-core-serializer`](./specs/0001-core-serializer.md).
+- [Core package documentation](./packages/core/README.md)
+- [Core serializer specification](./specs/0001-core-serializer.md)
+- [Runnable examples](./samples/src/core)
 
 ## Development
 
-Morphos uses pnpm workspaces and requires the pnpm version declared in
-`package.json`.
+This repository uses the pnpm version declared in `package.json`.
 
 ```sh
 pnpm install
 
-# Run the core tests
-pnpm --filter @morphos/core exec vitest run
+# Test and type-check the core package
+pnpm --filter @eidora/core exec vitest run
+pnpm --filter @eidora/core exec tsc --noEmit
 
-# Type-check the core package
-pnpm --filter @morphos/core exec tsc --noEmit
-
-# Build all workspace packages
+# Build the workspace
 pnpm build
 
 # Check formatting and linting
@@ -94,11 +115,5 @@ pnpm exec oxfmt --check .
 pnpm exec oxlint .
 ```
 
-Build output is written to each package's `lib` directory.
-
-## Contributing
-
-Read [`AGENTS.md`](./AGENTS.md) for repository conventions, validation
-expectations, and specification numbering. User-visible package changes should
-include focused tests and a Changesets entry when they are prepared for
-release.
+See [`AGENTS.md`](./AGENTS.md) for contribution conventions, validation
+expectations, and specification requirements.

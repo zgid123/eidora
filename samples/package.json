@@ -10,7 +10,7 @@
     "#/*": "./src/*"
   },
   "dependencies": {
-    "@morphos/core": "workspace:^"
+    "@eidora/core": "workspace:^"
   },
   "devDependencies": {
     "esbuild": "0.28.1"

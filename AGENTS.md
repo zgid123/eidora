@@ -2,8 +2,8 @@
 
 ## Project Overview
 
-Morphos is a pnpm workspace for TypeScript serialization libraries. The main
-package, `@morphos/core`, creates plain view-model objects from decorated schema
+Eidora is a pnpm workspace for TypeScript serialization libraries. The main
+package, `@eidora/core`, creates plain view-model objects from decorated schema
 classes. The repository uses ESM, Stage 3 decorators, strict shared TypeScript
 configuration, Vitest, tsdown, Oxc tooling, and Turbo.
 
@@ -100,10 +100,10 @@ change affects package boundaries or public types.
 
 ```sh
 # Run the core test suite once
-pnpm --filter @morphos/core exec vitest run
+pnpm --filter @eidora/core exec vitest run
 
 # Type-check the core package without emitting files
-pnpm --filter @morphos/core exec tsc --noEmit
+pnpm --filter @eidora/core exec tsc --noEmit
 
 # Build every workspace package
 pnpm build
@@ -122,7 +122,7 @@ check passed unless it was actually run.
 ## Samples
 
 - Keep samples minimal and focused on one supported capability.
-- Import from published-style package entry points such as `@morphos/core`, not
+- Import from published-style package entry points such as `@eidora/core`, not
   from another package's `src` directory.
 - Samples must compile as part of the workspace build.
 - Never put behavior only in a sample; production behavior belongs in a

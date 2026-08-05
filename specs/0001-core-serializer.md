@@ -6,7 +6,7 @@ Implemented
 
 ## Summary
 
-`@morphos/core` provides a decorator-driven serializer that projects an input
+`@eidora/core` provides a decorator-driven serializer that projects an input
 object into a plain view-model object. Only fields decorated with `@Field` are
 included. Fields may be renamed or computed, and output keys may be transformed
 recursively to camel case, Pascal case, or snake case.

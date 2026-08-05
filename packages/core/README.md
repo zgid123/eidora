@@ -1,4 +1,4 @@
-# `@morphos/core`
+# `@eidora/core`
 
 Decorator-driven TypeScript utilities for serializing application data into
 explicit view-model objects.
@@ -6,7 +6,7 @@ explicit view-model objects.
 ## Installation
 
 ```sh
-pnpm add @morphos/core
+pnpm add @eidora/core
 ```
 
 ## Basic Usage
@@ -15,7 +15,7 @@ Decorate the schema class with `@ViewModel()` and each output field with
 `@Field`:
 
 ```ts
-import { Field, Serializer, ViewModel } from '@morphos/core';
+import { Field, Serializer, ViewModel } from '@eidora/core';
 
 interface IUser {
   readonly id: string;
