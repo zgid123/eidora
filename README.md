@@ -5,9 +5,10 @@ Ancient Greek **εἶδος** (_eidos_), meaning _form_, _appearance_, or
 _representation_. For this project, **Eidora** means **the form in which an
 object is presented**.
 
-Eidora is a type-safe, decorator-driven serializer for TypeScript. It projects
-domain objects into explicit view models, giving each use case the data shape it
-needs without mutating the source or exposing undeclared fields.
+Eidora is a type-safe serializer for TypeScript. It projects domain objects into
+explicit view models defined with decorators or supported schema engines,
+giving each use case the data shape it needs without mutating the source or
+exposing undeclared fields.
 
 A domain model can have many valid representations: a public response, an admin
 view, or a context-specific payload. Eidora lets you define each representation
@@ -22,6 +23,7 @@ the domain model stays unchanged.
 - Recursive `camel`, `pascal`, and `snake` key transforms
 - Plain-object output with no schema construction or source mutation
 - Strongly typed schema results
+- Extensible schema adapters, beginning with Zod
 
 ## Quick Start
 
@@ -76,12 +78,10 @@ limitations.
 
 ## Packages
 
-| Package                           | Description                                                                                |
-| --------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`@eidora/core`](./packages/core) | View-model decorators, field mapping, serialization context, and recursive key transforms. |
-
-Adapters for external schema and validation libraries are planned under
-`packages/@adapters`.
+| Package                                   | Description                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`@eidora/core`](./packages/core)         | View-model decorators, field mapping, serialization context, and recursive key transforms. |
+| [`@eidora/zod`](./packages/@adapters/zod) | Zod object-schema validation and serialization through the core adapter API.               |
 
 ## Repository
 
@@ -93,7 +93,9 @@ specs/               Technical specifications and design decisions
 ```
 
 - [Core package documentation](./packages/core/README.md)
+- [Zod adapter documentation](./packages/@adapters/zod/README.md)
 - [Core serializer specification](./specs/0001-core-serializer.md)
+- [Zod adapter specification](./specs/0002-zod-adapter.md)
 - [Runnable examples](./samples/src/core)
 
 ## Development

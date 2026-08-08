@@ -13,7 +13,7 @@ export function registerViewModel(
   metadataByViewModel.set(constructor, metadata);
 }
 
-export function isViewModel(constructor: IViewModelConstructor): boolean {
+export function isViewModel(constructor: Function): boolean {
   return viewModels.has(constructor);
 }
 
