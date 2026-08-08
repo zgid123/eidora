@@ -6,9 +6,9 @@ Implemented
 
 ## Summary
 
-`@eidora/hono-zod` exports a Hono middleware named `serialize`. It rewrites the
-top-level `data` property of a JSON response with Eidora's Zod-backed
-serializer after the route handler completes.
+`@eidora/hono-zod-middleware` exports a Hono middleware named `serialize`. It
+rewrites the top-level `data` property of a JSON response with Eidora's
+Zod-backed serializer after the route handler completes.
 
 ## Goals
 
@@ -20,7 +20,7 @@ serializer after the route handler completes.
 ## Public Contract
 
 ```ts
-import { serialize } from '@eidora/hono-zod';
+import { serialize } from '@eidora/hono-zod-middleware';
 
 app.get('/', serialize(UserSchema), async (context) => {
   return context.json({
