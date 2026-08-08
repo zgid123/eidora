@@ -1,5 +1,5 @@
 ---
-'@eidora/core': patch
+"@eidora/core": patch
 ---
 
 Add the public serializer adapter contract for integrating external schema

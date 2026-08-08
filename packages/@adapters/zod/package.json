@@ -1,6 +1,6 @@
 {
   "name": "@eidora/zod",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "Zod schema adapter for Eidora.",
   "type": "module",
   "imports": {
@@ -42,9 +42,9 @@
     "@eidora/core": "workspace:^"
   },
   "peerDependencies": {
-    "zod": "^4.0.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "zod": "^4.0.0"
+    "zod": "4.4.3"
   }
 }
