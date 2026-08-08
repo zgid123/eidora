@@ -1,7 +1,8 @@
 # `@eidora/core`
 
 Decorator-driven TypeScript utilities for serializing application data into
-explicit view-model objects.
+explicit view-model objects, with an adapter contract for external schema
+engines.
 
 ## Installation
 
@@ -129,12 +130,49 @@ const result = serializer.serialize(
 A transform passed to `serialize` overrides the constructor setting for that
 call.
 
+## Schema Adapters
+
+Pass an adapter to the serializer to support its native schema objects in
+addition to decorated view-model classes:
+
+```ts
+import { Serializer } from '@eidora/core';
+import { ZodAdapter } from '@eidora/zod';
+import { z } from 'zod';
+
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+const result = new Serializer({
+  adapter: new ZodAdapter(),
+}).serialize(
+  {
+    id: 'user-1',
+    name: 'Alpha',
+    password: 'secret',
+  },
+  {
+    schema: UserSchema,
+  },
+);
+
+// { id: 'user-1', name: 'Alpha' }
+```
+
+Adapter authors implement `IAdapter` and provide an associated `IAdapterType`.
+The associated type preserves the relationship between each engine schema and
+its inferred output type. `serialize` receives the source object, native schema,
+and optional Eidora context. Adapter results pass through the same recursive key
+transform as decorated view models.
+
 ## API
 
 ### `@ViewModel()`
 
 Registers a class as a serialization schema. Passing an undecorated schema to
-`serialize` throws a `TypeError`.
+`serialize` throws a `TypeError` unless the configured adapter supports it.
 
 ### `@Field`
 
@@ -161,7 +199,8 @@ Private, static, and symbol-keyed fields cannot be decorated with `@Field`.
 Creates a reusable serializer.
 
 ```ts
-interface ISerializerOptions {
+interface ISerializerOptions<TAdapter> {
+  readonly adapter?: TAdapter;
   readonly transform?: 'camel' | 'pascal' | 'snake';
 }
 ```
@@ -170,7 +209,8 @@ The default transform is `camel`.
 
 ### `serializer.serialize(data, options)`
 
-Serializes a non-null source object with the selected schema.
+Serializes a non-null source object with a decorated view-model schema or a
+schema supported by the configured adapter.
 
 ```ts
 interface ISerializeOptions<TSchema> {
@@ -180,9 +220,9 @@ interface ISerializeOptions<TSchema> {
 }
 ```
 
-The return type is `InstanceType<TSchema>`. The runtime value is deliberately a
-plain object rather than an instance of the schema class; schema constructors
-and field initializers are not executed.
+For a decorated schema, the return type is `InstanceType<TSchema>`. For an
+adapter schema, it is the adapter's inferred result type. The runtime value is a
+plain object; view-model constructors and field initializers are not executed.
 
 ## Behavior
 
@@ -195,7 +235,7 @@ and field initializers are not executed.
 ## Current Limitations
 
 - Field mapping is synchronous.
-- Field values are not validated or coerced at runtime.
+- Decorated view-model field values are not validated or coerced at runtime.
 - Circular references are not handled during recursive key transformation.
 - Only public, non-static, string-keyed class fields are supported.
 

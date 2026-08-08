@@ -1,6 +1,5 @@
-import { expectTypeOf } from 'vitest';
-
-import { Field, Serializer, ViewModel } from '../index';
+import { Field, ViewModel } from '../decorators';
+import { Serializer } from '../serializer';
 
 @ViewModel()
 class UserViewModel {

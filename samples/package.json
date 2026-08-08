@@ -10,7 +10,9 @@
     "#/*": "./src/*"
   },
   "dependencies": {
-    "@eidora/core": "workspace:^"
+    "@eidora/core": "workspace:^",
+    "@eidora/zod": "workspace:^",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "esbuild": "0.28.1"

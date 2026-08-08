@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
-
-import { Field, Serializer, ViewModel } from '../index';
+import type {
+  IAdapter,
+  IAdapterSerializeParams,
+  IAdapterType,
+} from '../adapter';
+import { Field, ViewModel } from '../decorators';
+import { Serializer } from '../serializer';
 
 interface IFieldContextOptions {
   readonly name: string | symbol;
@@ -72,7 +76,89 @@ class UserViewModel {
 
 decorateViewModel(UserViewModel, ['id', 'name']);
 
+interface ITestSchema {
+  readonly kind: 'test';
+}
+
+interface ITestAdapterType extends IAdapterType {
+  readonly schema: ITestSchema;
+  readonly result: {
+    readonly profile_data: {
+      readonly display_name: unknown;
+      readonly locale_code: unknown;
+    };
+  };
+}
+
+class TestAdapter implements IAdapter<ITestSchema, ITestAdapterType> {
+  declare public readonly type: ITestAdapterType;
+
+  public supports(schema: unknown): schema is ITestSchema {
+    return (
+      typeof schema === 'object' &&
+      schema !== null &&
+      Reflect.get(schema, 'kind') === 'test'
+    );
+  }
+
+  public serialize<TSchema extends ITestSchema>({
+    data,
+    context,
+  }: IAdapterSerializeParams<TSchema>): object {
+    return {
+      profile_data: {
+        display_name: Reflect.get(data, 'name'),
+        locale_code: context?.['locale'],
+      },
+    };
+  }
+}
+
 describe('Serializer', () => {
+  it('serializes a schema supported by the configured adapter', () => {
+    const result = new Serializer({
+      adapter: new TestAdapter(),
+    }).serialize(
+      {
+        name: 'Alpha',
+      },
+      {
+        schema: {
+          kind: 'test',
+        },
+        context: {
+          locale: 'en-US',
+        },
+      },
+    );
+
+    expect(result).toEqual({
+      profileData: {
+        displayName: 'Alpha',
+        localeCode: 'en-US',
+      },
+    });
+  });
+
+  it('continues to serialize decorated schemas when an adapter is configured', () => {
+    const result = new Serializer({
+      adapter: new TestAdapter(),
+    }).serialize(
+      {
+        id: 'user-1',
+        name: 'Alpha',
+      },
+      {
+        schema: UserViewModel,
+      },
+    );
+
+    expect(result).toEqual({
+      id: 'user-1',
+      name: 'Alpha',
+    });
+  });
+
   it('serializes only decorated fields to a plain object', () => {
     const serializer = new Serializer();
     const data = {
@@ -383,7 +469,9 @@ describe('Serializer', () => {
         },
       ),
     ).toThrow(
-      new TypeError('Serializer schema must be decorated with @ViewModel().'),
+      new TypeError(
+        'Serializer schema must be decorated with @ViewModel() or supported by the configured adapter.',
+      ),
     );
   });
 
