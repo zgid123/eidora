@@ -1,5 +1,5 @@
 ---
-'@eidora/zod': patch
+"@eidora/zod": patch
 ---
 
 Add the Zod adapter with lenient property projection, cached schema
