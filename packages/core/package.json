@@ -1,6 +1,6 @@
 {
   "name": "@eidora/core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Serializer utilities for TypeScript applications.",
   "type": "module",
   "imports": {
