@@ -1,0 +1,50 @@
+{
+  "name": "@eidora/arktype",
+  "version": "0.0.1",
+  "description": "ArkType schema adapter for Eidora.",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.cts",
+        "default": "./lib/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "arktype",
+    "eidora",
+    "serializer"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "Alpha",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zgid123/eidora.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "prepublish": "pnpm build",
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "@eidora/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "arktype": "^2.2.0"
+  },
+  "devDependencies": {
+    "arktype": "2.2.0"
+  }
+}

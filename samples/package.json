@@ -10,9 +10,11 @@
     "#/*": "./src/*"
   },
   "dependencies": {
+    "@eidora/arktype": "workspace:^",
     "@eidora/core": "workspace:^",
     "@eidora/zod": "workspace:^",
-    "zod": "^4.4.3"
+    "arktype": "2.2.0",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "esbuild": "0.28.1"
