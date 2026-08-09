@@ -25,7 +25,7 @@ function resolveLoader(id: string): Loader | undefined {
 
 export default defineConfig({
   dts: true,
-  entry: ['src/core/*.ts', 'src/zod/*.ts'],
+  entry: ['src/arktype/*.ts', 'src/core/*.ts', 'src/zod/*.ts'],
   format: ['esm', 'cjs'],
   outDir: 'lib',
   plugins: [

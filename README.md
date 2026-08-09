@@ -23,7 +23,7 @@ the domain model stays unchanged.
 - Recursive `camel`, `pascal`, and `snake` key transforms
 - Plain-object output with no schema construction or source mutation
 - Strongly typed schema results
-- Extensible schema adapters, beginning with Zod
+- Extensible schema adapters for ArkType and Zod
 
 ## Quick Start
 
@@ -78,10 +78,11 @@ limitations.
 
 ## Packages
 
-| Package                                   | Description                                                                                |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`@eidora/core`](./packages/core)         | View-model decorators, field mapping, serialization context, and recursive key transforms. |
-| [`@eidora/zod`](./packages/@adapters/zod) | Zod object-schema validation and serialization through the core adapter API.               |
+| Package                                           | Description                                                                                |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`@eidora/core`](./packages/core)                 | View-model decorators, field mapping, serialization context, and recursive key transforms. |
+| [`@eidora/arktype`](./packages/@adapters/arktype) | ArkType object-schema validation and serialization through the core adapter API.           |
+| [`@eidora/zod`](./packages/@adapters/zod)         | Zod object-schema validation and serialization through the core adapter API.               |
 
 ## Repository
 
@@ -93,9 +94,11 @@ specs/               Technical specifications and design decisions
 ```
 
 - [Core package documentation](./packages/core/README.md)
+- [ArkType adapter documentation](./packages/@adapters/arktype/README.md)
 - [Zod adapter documentation](./packages/@adapters/zod/README.md)
 - [Core serializer specification](./specs/0001-core-serializer.md)
 - [Zod adapter specification](./specs/0002-zod-adapter.md)
+- [ArkType adapter specification](./specs/0004-arktype-adapter.md)
 - [Runnable examples](./samples/src/core)
 
 ## Development

@@ -136,7 +136,12 @@ check passed unless it was actually run.
 - Do not reuse an existing number.
 - Include status, goals, public contracts, technical design, error behavior,
   required behavior or acceptance criteria, and non-goals when applicable.
-- Keep specifications synchronized with implementation changes.
+- Treat completed numbered specifications as immutable historical decisions.
+- Keep all implementation discoveries and fixes for the current cohesive change
+  in its active specification.
+- For every later feature or fix outside that active change, create the next
+  numbered specification and document the complete change there instead of
+  editing an older specification.
 
 ## Dependency and Release Changes
 

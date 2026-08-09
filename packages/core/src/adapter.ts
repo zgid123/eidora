@@ -31,6 +31,16 @@ export type TAdapterSchema<TAdapter> = TAdapter extends {
 export type TAdapterResult<
   TAdapter,
   TSchema extends object,
-> = TAdapter extends { readonly type: IAdapterType }
-  ? (TAdapter['type'] & { readonly schema: TSchema })['result']
+> = TAdapter extends {
+  readonly type: IAdapterType;
+}
+  ? Omit<TAdapter['type'], 'schema'> & {
+      readonly schema: TSchema;
+    } extends infer TResolvedType
+    ? TResolvedType extends {
+        readonly result: object;
+      }
+      ? TResolvedType['result']
+      : never
+    : never
   : never;
