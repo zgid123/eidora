@@ -12,8 +12,11 @@
   "dependencies": {
     "@eidora/arktype": "workspace:^",
     "@eidora/core": "workspace:^",
+    "@eidora/hono-arktype-middleware": "workspace:^",
+    "@eidora/hono-zod-middleware": "workspace:^",
     "@eidora/zod": "workspace:^",
     "arktype": "2.2.0",
+    "hono": "4.13.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
