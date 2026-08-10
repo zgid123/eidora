@@ -78,6 +78,22 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
 
+  packages/@middlewares/hono/arktype-middleware:
+    dependencies:
+      '@eidora/arktype':
+        specifier: workspace:^
+        version: link:../../../@adapters/arktype
+      '@eidora/core':
+        specifier: workspace:^
+        version: link:../../../core
+    devDependencies:
+      arktype:
+        specifier: 2.2.0
+        version: 2.2.0
+      hono:
+        specifier: 4.13.1
+        version: 4.13.1
+
   packages/@middlewares/hono/zod-middleware:
     dependencies:
       '@eidora/core':
@@ -108,12 +124,21 @@ importers:
       '@eidora/core':
         specifier: workspace:^
         version: link:../packages/core
+      '@eidora/hono-arktype-middleware':
+        specifier: workspace:^
+        version: link:../packages/@middlewares/hono/arktype-middleware
+      '@eidora/hono-zod-middleware':
+        specifier: workspace:^
+        version: link:../packages/@middlewares/hono/zod-middleware
       '@eidora/zod':
         specifier: workspace:^
         version: link:../packages/@adapters/zod
       arktype:
         specifier: 2.2.0
         version: 2.2.0
+      hono:
+        specifier: 4.13.1
+        version: 4.13.1
       zod:
         specifier: 4.4.3
         version: 4.4.3

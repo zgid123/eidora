@@ -238,9 +238,3 @@ plain object; view-model constructors and field initializers are not executed.
 - Decorated view-model field values are not validated or coerced at runtime.
 - Circular references are not handled during recursive key transformation.
 - Only public, non-static, string-keyed class fields are supported.
-
-## Related Documentation
-
-- [Core serializer technical specification](../../specs/0001-core-serializer.md)
-- [Repository development guide](../../AGENTS.md)
-- [Runnable samples](../../samples/src/core)

@@ -1,0 +1,54 @@
+{
+  "name": "@eidora/hono-arktype-middleware",
+  "version": "0.0.1",
+  "description": "ArkType Middleware for Eidora.",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/index.d.mts",
+        "default": "./lib/index.mjs"
+      },
+      "require": {
+        "types": "./lib/index.d.cts",
+        "default": "./lib/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "arktype",
+    "eidora",
+    "middleware",
+    "hono"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "author": "Alpha",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zgid123/eidora.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "prepublish": "pnpm build",
+    "build": "tsdown"
+  },
+  "dependencies": {
+    "@eidora/arktype": "workspace:^",
+    "@eidora/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "arktype": "^2.2.0",
+    "hono": "^4.13.1"
+  },
+  "devDependencies": {
+    "arktype": "2.2.0",
+    "hono": "4.13.1"
+  }
+}

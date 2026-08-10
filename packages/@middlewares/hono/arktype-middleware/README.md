@@ -1,25 +1,25 @@
-# `@eidora/hono-zod-middleware`
+# `@eidora/hono-arktype-middleware`
 
-Hono response serialization middleware backed by Eidora's Zod adapter.
+Hono response serialization middleware backed by Eidora's ArkType adapter.
 
 ## Installation
 
 ```sh
-pnpm add @eidora/hono-zod-middleware hono zod
+pnpm add @eidora/hono-arktype-middleware arktype hono
 ```
 
 ## Basic Usage
 
-Pass a Zod object schema to `serialize` before the route handler:
+Pass an ArkType object schema to `serialize` before the route handler:
 
 ```ts
-import { serialize } from '@eidora/hono-zod-middleware';
+import { serialize } from '@eidora/hono-arktype-middleware';
+import { type } from 'arktype';
 import { Hono } from 'hono';
-import { z } from 'zod';
 
-const UserSchema = z.object({
-  id: z.string(),
-  display_name: z.string(),
+const UserSchema = type({
+  id: 'string',
+  display_name: 'string',
 });
 
 const app = new Hono();
@@ -64,7 +64,7 @@ and serializes its top-level `data` property when the response has an
 
 | `data` value       | Behavior                                     |
 | ------------------ | -------------------------------------------- |
-| Object             | Serialized with the supplied Zod schema      |
+| Object             | Serialized with the supplied ArkType schema  |
 | Array              | Every item is serialized; order is preserved |
 | Nested array       | Items are serialized recursively             |
 | `null`             | Preserved as `null`                          |
@@ -109,13 +109,13 @@ A primitive `data` value throws with this message:
 Serialized response data must be an object, array, or null.
 ```
 
-Serialization failures, including exceptions from Zod transforms, propagate
+Serialization failures, including exceptions from ArkType morphs, propagate
 through Hono's normal error handling and can be handled with `app.onError`.
 
-## Zod Serialization Semantics
+## ArkType Serialization Semantics
 
-The middleware uses `@eidora/zod`. Unknown properties are omitted, coercions
-and property transforms are applied, and properties that fail ordinary Zod
-validation are omitted. See the
-[Zod adapter documentation](../../../@adapters/zod/README.md) for its complete
-schema support and validation behavior.
+The middleware uses `@eidora/arktype`. Unknown, missing, and invalid root
+properties are omitted, while successful constraints, morphs, defaults, and
+nested validation are preserved. See the
+[ArkType adapter documentation](https://www.npmjs.com/package/@eidora/arktype)
+for its complete schema support and validation behavior.
