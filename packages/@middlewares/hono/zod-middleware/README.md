@@ -101,6 +101,43 @@ app.get('/users', serialize(UserSchema), (context) => {
 
 Each item is serialized independently with `UserSchema`.
 
+## Serialization Context
+
+The middleware merges Hono's request-scoped variables (`context.var`) with an
+optional serialization context passed as the second argument to `serialize`.
+Additional values override request variables with the same key. Populate
+request variables with `context.set(...)`, then read both sources from a
+contextual schema transform:
+
+```ts
+import { createSchema } from '@eidora/zod';
+
+const ContextUserSchema = createSchema(UserSchema, {
+  transform: {
+    id(data, context) {
+      return `${String(context?.['tenantId'])}:${data.id}:${String(context?.['audience'])}`;
+    },
+  },
+});
+
+app.get(
+  '/users/:id',
+  serialize(ContextUserSchema, {
+    audience: 'public',
+  }),
+  (context) => {
+    context.set('tenantId', 'tenant-1');
+
+    return context.json({
+      data: {
+        id: context.req.param('id'),
+        display_name: 'Alpha',
+      },
+    });
+  },
+);
+```
+
 ## Error Handling
 
 A primitive `data` value throws with this message:

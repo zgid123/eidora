@@ -5,9 +5,27 @@ import type {
 } from '@eidora/core';
 import { type, Type } from 'arktype';
 
-interface IArkTypeSchema {
-  readonly infer: object;
-}
+import {
+  applyArkTypeSchemaTransforms,
+  isArkTypeCreatedSchema,
+  type IArkTypeCreatedSchema,
+  type IArkTypeSchema,
+  type TArkTypeCreatedSchemaResult,
+  type TArkTypeSchemaTransforms,
+} from './createSchema';
+
+type TArkTypeAdapterSchema = IArkTypeSchema | IArkTypeCreatedSchema;
+
+type TArkTypeAdapterResult<TSchema> = TSchema extends IArkTypeCreatedSchema
+  ? TSchema['schema'] extends infer TCreatedSchema extends IArkTypeSchema
+    ? TSchema['transform'] extends infer TTransforms extends
+        TArkTypeSchemaTransforms<TCreatedSchema>
+      ? TArkTypeCreatedSchemaResult<TCreatedSchema, TTransforms>
+      : never
+    : never
+  : TSchema extends IArkTypeSchema
+    ? Partial<TSchema['infer']>
+    : never;
 
 interface IArkTypePropertyType {
   (data: unknown): unknown;
@@ -54,12 +72,12 @@ interface IArkTypeRuntimeNode {
 }
 
 interface IArkTypeAdapterType extends IAdapterType {
-  readonly schema: IArkTypeSchema;
-  readonly result: Partial<this['schema']['infer']>;
+  readonly schema: TArkTypeAdapterSchema;
+  readonly result: TArkTypeAdapterResult<this['schema']>;
 }
 
 export class ArkTypeAdapter implements IAdapter<
-  IArkTypeSchema,
+  TArkTypeAdapterSchema,
   IArkTypeAdapterType
 > {
   declare public readonly type: IArkTypeAdapterType;
@@ -68,7 +86,34 @@ export class ArkTypeAdapter implements IAdapter<
     IArkTypeLenientSchema
   >();
 
-  public supports(schema: unknown): schema is IArkTypeSchema {
+  public supports(schema: unknown): schema is TArkTypeAdapterSchema {
+    if (isArkTypeCreatedSchema(schema)) {
+      return this.#supportsSchema(schema.schema);
+    }
+
+    return this.#supportsSchema(schema);
+  }
+
+  public serialize<TSchema extends TArkTypeAdapterSchema>({
+    context,
+    data,
+    schema,
+  }: IAdapterSerializeParams<TSchema>): TArkTypeAdapterResult<TSchema> {
+    if (isArkTypeCreatedSchema(schema)) {
+      return applyArkTypeSchemaTransforms({
+        context,
+        schema,
+        data: this.#serializeSchema(data, schema.schema),
+      }) as TArkTypeAdapterResult<TSchema>;
+    }
+
+    return this.#serializeSchema(
+      data,
+      schema,
+    ) as TArkTypeAdapterResult<TSchema>;
+  }
+
+  #supportsSchema(schema: unknown): schema is IArkTypeSchema {
     if (!(schema instanceof Type)) {
       return false;
     }
@@ -82,10 +127,10 @@ export class ArkTypeAdapter implements IAdapter<
     }
   }
 
-  public serialize<TSchema extends IArkTypeSchema>({
-    data,
-    schema,
-  }: IAdapterSerializeParams<TSchema>): Partial<TSchema['infer']> {
+  #serializeSchema<TSchema extends IArkTypeSchema>(
+    data: object,
+    schema: TSchema,
+  ): Partial<TSchema['infer']> {
     const parsed = this.#getLenientSchema(schema)(data);
 
     if (parsed instanceof type.errors) {

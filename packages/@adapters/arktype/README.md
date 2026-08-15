@@ -97,6 +97,69 @@ The root morph receives the successfully parsed partial input. Morph callbacks
 must tolerate properties that the original schema declares as required but the
 adapter may omit at runtime.
 
+## Per-Property Transforms
+
+Use `createSchema` to replace selected top-level properties after ArkType
+parsing. Each callback receives the same read-only partial parsed output and the
+current Eidora serialization context. Properties without callbacks keep their
+normal parsed values.
+
+```ts
+import { Serializer } from '@eidora/core';
+import { ArkTypeAdapter, createSchema } from '@eidora/arktype';
+import { type } from 'arktype';
+
+const UserSchema = createSchema(
+  type({
+    id: 'string',
+    role: "'admin' | 'member'",
+  }),
+  {
+    transform: {
+      role(data, context) {
+        if (!data.role) {
+          return undefined;
+        }
+
+        const locale = String(context?.['locale'] ?? 'en');
+
+        return `${locale}:${data.role}`;
+      },
+    },
+  },
+);
+
+const result = new Serializer({
+  adapter: new ArkTypeAdapter(),
+}).serialize(
+  {
+    id: 'user-1',
+    role: 'admin',
+  },
+  {
+    context: {
+      locale: 'vi',
+    },
+    schema: UserSchema,
+  },
+);
+
+// { id: 'user-1', role: 'vi:admin' }
+```
+
+Callbacks run only for properties present after parsing, including properties
+produced by defaults. Returning `undefined` omits the property. Missing or
+invalid properties remain omitted without invoking their callbacks. Native
+ArkType morphs run first; Eidora's recursive key casing runs last.
+
+In the example, only `role` is transformed. The unlisted `id` property keeps
+its normal parsed value. Callback data is partial because other properties may
+be missing or invalid, so callbacks must narrow values before using them.
+
+Calling `createSchema(NativeSchema)` without options, or omitting a property
+from `transform`, preserves normal adapter behavior. Transform callbacks are
+synchronous, and thrown errors propagate unchanged.
+
 ## Schema Caching
 
 Each `ArkTypeAdapter` instance caches its lenient schemas in a `WeakMap` keyed by
@@ -106,6 +169,10 @@ while unused consumer schemas can still be garbage-collected.
 The cached schema uses ArkType's `delete` undeclared-key behavior. The adapter
 then removes top-level properties whose wrapped validator produced `undefined`.
 Neither operation mutates the consumer's source object or original schema.
+
+Created schemas use the wrapped native schema as their cache key. Changing the
+serialization context does not recreate the native schema or rebuild the
+lenient schema.
 
 ## Result Types
 
@@ -119,8 +186,11 @@ const result = new Serializer({
   schema: UserSchema,
 });
 
-// Partial<typeof UserSchema.infer>
+// { id?: string; role?: string }
 ```
+
+Transformed properties use their callback return types. Untransformed
+properties retain their native ArkType output types.
 
 Eidora applies its configured recursive `camel`, `pascal`, or `snake` key
 transform after ArkType serialization. Camel case remains the default.
@@ -131,6 +201,8 @@ The adapter supports ArkType object `Type`s with named properties and direct
 object-to-object root morphs. Named properties may use constraints, defaults,
 morphs, nested schemas, and intersections that expose ArkType's object-property
 metadata.
+
+`createSchema` may wrap any supported native schema.
 
 Primitive, array, tuple, and union schemas are not supported. Root morphs must
 infer an object output; an unexpected non-object runtime value normalizes to an
