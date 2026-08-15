@@ -1,6 +1,6 @@
 {
   "name": "@eidora/arktype",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "ArkType schema adapter for Eidora.",
   "type": "module",
   "imports": {
