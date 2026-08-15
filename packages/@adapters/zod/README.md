@@ -119,6 +119,69 @@ The transform receives the successfully parsed partial input. Transform
 functions must tolerate properties that the original Zod object declares as
 required but that the adapter may omit at runtime.
 
+## Per-Property Transforms
+
+Use `createSchema` to replace selected top-level properties after Zod parsing.
+Each callback receives the same read-only partial parsed output and the current
+Eidora serialization context. Properties without callbacks keep their normal
+parsed values.
+
+```ts
+import { Serializer } from '@eidora/core';
+import { createSchema, ZodAdapter } from '@eidora/zod';
+import { z } from 'zod';
+
+const UserSchema = createSchema(
+  z.object({
+    id: z.string(),
+    role: z.enum(['admin', 'member']),
+  }),
+  {
+    transform: {
+      role(data, context) {
+        if (!data.role) {
+          return undefined;
+        }
+
+        const locale = String(context?.['locale'] ?? 'en');
+
+        return `${locale}:${data.role}`;
+      },
+    },
+  },
+);
+
+const result = new Serializer({
+  adapter: new ZodAdapter(),
+}).serialize(
+  {
+    id: 'user-1',
+    role: 'admin',
+  },
+  {
+    context: {
+      locale: 'vi',
+    },
+    schema: UserSchema,
+  },
+);
+
+// { id: 'user-1', role: 'vi:admin' }
+```
+
+Callbacks run only for properties present after parsing, including properties
+produced by defaults or fallbacks. Returning `undefined` omits the property.
+Missing or invalid properties remain omitted without invoking their callbacks.
+Native Zod transforms run first; Eidora's recursive key casing runs last.
+
+In the example, only `role` is transformed. The unlisted `id` property keeps
+its normal parsed value. Callback data is partial because other properties may
+be missing or invalid, so callbacks must narrow values before using them.
+
+Calling `createSchema(NativeSchema)` without options, or omitting a property
+from `transform`, preserves normal adapter behavior. Transform callbacks are
+synchronous, and thrown errors propagate unchanged.
+
 ## Result Types
 
 Serialization returns a partial output of the concrete schema because any
@@ -131,8 +194,11 @@ const result = new Serializer({
   schema: UserSchema,
 });
 
-// Partial<z.output<typeof UserSchema>>
+// { id?: string; role?: string }
 ```
+
+Transformed properties use their callback return types. Untransformed
+properties retain their native Zod output types.
 
 Eidora applies its configured recursive `camel`, `pascal`, or `snake` key
 transform after Zod serialization. Camel case remains the default.
@@ -147,12 +213,17 @@ Each `ZodAdapter` instance caches these internal schemas in a `WeakMap` keyed by
 the original `ZodObject`. Reusing the same schema avoids rebuilding it, while
 unused schemas can still be garbage-collected.
 
+Created schemas use the wrapped native schema as their cache key. Changing the
+serialization context does not recreate the native schema or rebuild the
+lenient schema.
+
 ## Supported Schemas
 
 The adapter supports:
 
 - Zod object schemas.
 - Direct object-to-object transforms originating from a Zod object schema.
+- Created schemas wrapping either supported native schema.
 - Arbitrary Zod property schemas, including coercions, nested schemas,
   refinements, and property transforms.
 

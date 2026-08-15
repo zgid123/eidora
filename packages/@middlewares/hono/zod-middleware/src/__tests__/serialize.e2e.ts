@@ -1,5 +1,5 @@
+import { createSchema } from '@eidora/zod';
 import { Hono } from 'hono';
-import { describe, expect, it, suite } from 'vitest';
 import { z } from 'zod';
 
 import { serialize } from '../serialize';
@@ -8,6 +8,13 @@ const UserSchema = z.object({
   id: z.string(),
   display_name: z.string(),
 });
+
+type TContextEnv = {
+  readonly Variables: {
+    readonly prefix: string;
+    readonly suffix: string;
+  };
+};
 
 describe('#serialize', () => {
   suite('when the handler returns a JSON data envelope', () => {
@@ -76,6 +83,56 @@ describe('#serialize', () => {
           },
           {
             id: 'user-2',
+            displayName: 'Beta',
+          },
+        ],
+      });
+    });
+  });
+
+  suite('when the schema uses serialization context', () => {
+    it('merges Hono variables and additional context for every item', async () => {
+      const ContextUserSchema = createSchema(UserSchema, {
+        transform: {
+          id(data, context) {
+            return `${String(context?.['prefix'])}${data.id}${String(context?.['suffix'])}`;
+          },
+        },
+      });
+      const app = new Hono<TContextEnv>().get(
+        '/',
+        serialize(ContextUserSchema, {
+          suffix: ':additional',
+        }),
+        (context) => {
+          context.set('prefix', 'request:');
+          context.set('suffix', ':request');
+
+          return context.json({
+            data: [
+              {
+                id: 'user-1',
+                display_name: 'Alpha',
+              },
+              {
+                id: 'user-2',
+                display_name: 'Beta',
+              },
+            ],
+          });
+        },
+      );
+
+      const response = await app.request('/');
+
+      await expect(response.json()).resolves.toEqual({
+        data: [
+          {
+            id: 'request:user-1:additional',
+            displayName: 'Alpha',
+          },
+          {
+            id: 'request:user-2:additional',
             displayName: 'Beta',
           },
         ],

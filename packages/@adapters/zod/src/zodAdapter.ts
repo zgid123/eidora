@@ -12,23 +12,65 @@ import {
   ZodTransform,
 } from 'zod';
 
-type TZodObjectTransform = ZodPipe<
-  ZodObject,
-  ZodTransform<Record<string, unknown>, Record<string, unknown>>
->;
+import {
+  applyZodSchemaTransforms,
+  isZodCreatedSchema,
+  type IZodCreatedSchema,
+  type TZodCreatedSchemaResult,
+  type TZodSchema,
+  type TZodSchemaTransforms,
+} from './createSchema';
 
-type TZodSchema = ZodObject | TZodObjectTransform;
+type TZodAdapterSchema = TZodSchema | IZodCreatedSchema;
+
+type TZodAdapterResult<TSchema> = TSchema extends IZodCreatedSchema
+  ? TSchema['schema'] extends infer TCreatedSchema extends TZodSchema
+    ? TSchema['transform'] extends infer TTransforms extends
+        TZodSchemaTransforms<TCreatedSchema>
+      ? TZodCreatedSchemaResult<TCreatedSchema, TTransforms>
+      : never
+    : never
+  : TSchema extends TZodSchema
+    ? Partial<output<TSchema>>
+    : never;
 
 interface IZodAdapterType extends IAdapterType {
-  readonly schema: TZodSchema;
-  readonly result: Partial<output<this['schema']>>;
+  readonly schema: TZodAdapterSchema;
+  readonly result: TZodAdapterResult<this['schema']>;
 }
 
-export class ZodAdapter implements IAdapter<TZodSchema, IZodAdapterType> {
+export class ZodAdapter implements IAdapter<
+  TZodAdapterSchema,
+  IZodAdapterType
+> {
   declare public readonly type: IZodAdapterType;
   readonly #lenientSchemaCache = new WeakMap<ZodObject, ZodObject>();
 
-  public supports(schema: unknown): schema is TZodSchema {
+  public supports(schema: unknown): schema is TZodAdapterSchema {
+    if (isZodCreatedSchema(schema)) {
+      return this.#supportsSchema(schema.schema);
+    }
+
+    return this.#supportsSchema(schema);
+  }
+
+  public serialize<TSchema extends TZodAdapterSchema>({
+    context,
+    data,
+    schema,
+  }: IAdapterSerializeParams<TSchema>): TZodAdapterResult<TSchema> {
+    if (isZodCreatedSchema(schema)) {
+      return applyZodSchemaTransforms({
+        context,
+        schema,
+        data: this.#serializeSchema(data, schema.schema),
+      }) as TZodAdapterResult<TSchema>;
+    }
+
+    return this.#serializeSchema(data, schema) as TZodAdapterResult<TSchema>;
+  }
+
+  #supportsSchema(schema: unknown): schema is TZodSchema {
     if (schema instanceof ZodObject) {
       return true;
     }
@@ -40,10 +82,10 @@ export class ZodAdapter implements IAdapter<TZodSchema, IZodAdapterType> {
     );
   }
 
-  public serialize<TSchema extends TZodSchema>({
-    data,
-    schema,
-  }: IAdapterSerializeParams<TSchema>): Partial<output<TSchema>> {
+  #serializeSchema<TSchema extends TZodSchema>(
+    data: object,
+    schema: TSchema,
+  ): Partial<output<TSchema>> {
     if (schema instanceof ZodObject) {
       return this.#parseObject(schema, data) as Partial<output<TSchema>>;
     }

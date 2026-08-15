@@ -215,14 +215,17 @@ schema supported by the configured adapter.
 ```ts
 interface ISerializeOptions<TSchema> {
   readonly schema: TSchema;
-  readonly context?: Readonly<Record<string, unknown>>;
+  readonly context?: TSerializeContext;
   readonly transform?: 'camel' | 'pascal' | 'snake';
 }
+
+type TSerializeContext = Readonly<Record<string, unknown>>;
 ```
 
 For a decorated schema, the return type is `InstanceType<TSchema>`. For an
 adapter schema, it is the adapter's inferred result type. The runtime value is a
 plain object; view-model constructors and field initializers are not executed.
+`TSerializeContext` is exported for adapter and schema-helper authors.
 
 ## Behavior
 

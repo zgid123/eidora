@@ -1,4 +1,8 @@
-import { Serializer, type TAdapterSchema } from '@eidora/core';
+import {
+  Serializer,
+  type TAdapterSchema,
+  type TSerializeContext,
+} from '@eidora/core';
 import { ZodAdapter } from '@eidora/zod';
 import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
@@ -37,13 +41,17 @@ function isJsonEnvelope(value: unknown): value is IJsonEnvelope {
   );
 }
 
-function serializeValue(value: unknown, schema: TZodSchema): unknown {
+function serializeValue(
+  value: unknown,
+  schema: TZodSchema,
+  context: TSerializeContext,
+): unknown {
   if (value === null) {
     return null;
   }
 
   if (Array.isArray(value)) {
-    return value.map((item) => serializeValue(item, schema));
+    return value.map((item) => serializeValue(item, schema, context));
   }
 
   if (typeof value !== 'object') {
@@ -54,10 +62,14 @@ function serializeValue(value: unknown, schema: TZodSchema): unknown {
 
   return serializer.serialize(value, {
     schema,
+    context,
   });
 }
 
-export function serialize(schema: TZodSchema): MiddlewareHandler {
+export function serialize(
+  schema: TZodSchema,
+  additionalContext?: TSerializeContext,
+): MiddlewareHandler {
   return createMiddleware(async (context, next): Promise<void> => {
     await next();
 
@@ -73,9 +85,13 @@ export function serialize(schema: TZodSchema): MiddlewareHandler {
       return;
     }
 
+    const serializationContext = {
+      ...context.var,
+      ...additionalContext,
+    };
     const serializedBody = {
       ...body,
-      data: serializeValue(body.data, schema),
+      data: serializeValue(body.data, schema, serializationContext),
     };
     const headers = new Headers(response.headers);
 

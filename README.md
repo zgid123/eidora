@@ -20,6 +20,7 @@ the domain model stays unchanged.
 - Explicit field allowlists through decorators
 - Renamed and computed output fields
 - Read-only context for request-specific mapping
+- Context-aware per-property transforms for ArkType and Zod schemas
 - Recursive `camel`, `pascal`, and `snake` key transforms
 - Plain-object output with no schema construction or source mutation
 - Strongly typed schema results
@@ -99,7 +100,9 @@ specs/               Technical specifications and design decisions
 - [Core serializer specification](./specs/0001-core-serializer.md)
 - [Zod adapter specification](./specs/0002-zod-adapter.md)
 - [ArkType adapter specification](./specs/0004-arktype-adapter.md)
-- [Runnable examples](./samples/src/core)
+- [Core runnable examples](./samples/src/core)
+- [ArkType per-property transform example](./samples/src/arktype/transform.ts)
+- [Zod per-property transform example](./samples/src/zod/transform.ts)
 
 ## Development
 
