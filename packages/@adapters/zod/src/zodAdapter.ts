@@ -15,20 +15,16 @@ import {
 import {
   applyZodSchemaTransforms,
   isZodCreatedSchema,
-  type IZodCreatedSchema,
+  type IZodCreatedSchemaRuntime,
   type TZodCreatedSchemaResult,
   type TZodSchema,
-  type TZodSchemaTransforms,
 } from './createSchema';
 
-type TZodAdapterSchema = TZodSchema | IZodCreatedSchema;
+type TZodAdapterSchema = TZodSchema | IZodCreatedSchemaRuntime;
 
-type TZodAdapterResult<TSchema> = TSchema extends IZodCreatedSchema
+type TZodAdapterResult<TSchema> = TSchema extends IZodCreatedSchemaRuntime
   ? TSchema['schema'] extends infer TCreatedSchema extends TZodSchema
-    ? TSchema['transform'] extends infer TTransforms extends
-        TZodSchemaTransforms<TCreatedSchema>
-      ? TZodCreatedSchemaResult<TCreatedSchema, TTransforms>
-      : never
+    ? TZodCreatedSchemaResult<TCreatedSchema>
     : never
   : TSchema extends TZodSchema
     ? Partial<output<TSchema>>
@@ -60,11 +56,16 @@ export class ZodAdapter implements IAdapter<
     schema,
   }: IAdapterSerializeParams<TSchema>): TZodAdapterResult<TSchema> {
     if (isZodCreatedSchema(schema)) {
-      return applyZodSchemaTransforms({
-        context,
+      const transformedData = applyZodSchemaTransforms({
+        data,
         schema,
-        data: this.#serializeSchema(data, schema.schema),
-      }) as TZodAdapterResult<TSchema>;
+        context,
+      });
+
+      return this.#serializeSchema(
+        transformedData,
+        schema.schema,
+      ) as TZodAdapterResult<TSchema>;
     }
 
     return this.#serializeSchema(data, schema) as TZodAdapterResult<TSchema>;

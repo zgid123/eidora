@@ -57,22 +57,23 @@ type TExpectedMappedResult = {
 expectTypeOf(mappedResult).toExtend<TExpectedMappedResult>();
 expectTypeOf<TExpectedMappedResult>().toExtend<typeof mappedResult>();
 
+interface IContextAwareSource {
+  readonly age: string;
+  readonly id: string;
+  readonly localeLabel?: string;
+}
+
 const contextAwareSchema = createSchema(
   type({
-    age: 'string.numeric.parse',
-    id: 'string',
+    age: 'number',
+    id: {
+      value: 'string',
+    },
   }),
   {
     transform: {
-      id(data, context) {
-        expectTypeOf(data).toEqualTypeOf<
-          Readonly<
-            Partial<{
-              age: number;
-              id: string;
-            }>
-          >
-        >();
+      id(data: Readonly<IContextAwareSource>, context) {
+        expectTypeOf(data).toEqualTypeOf<Readonly<IContextAwareSource>>();
         expectTypeOf(context).toEqualTypeOf<
           Readonly<Record<string, unknown>> | undefined
         >();
@@ -80,6 +81,9 @@ const contextAwareSchema = createSchema(
         return {
           value: `${data.id}:${String(context?.['locale'])}`,
         };
+      },
+      age(data: Readonly<IContextAwareSource>) {
+        return Number(data.age);
       },
     },
   },
@@ -125,14 +129,60 @@ const normallyCreatedResult = new Serializer({
 expectTypeOf(normallyCreatedResult).toExtend<TExpectedResult>();
 expectTypeOf<TExpectedResult>().toExtend<typeof normallyCreatedResult>();
 
+const morphedTransformSchema = createSchema(
+  type({
+    id: 'string.numeric.parse',
+  }),
+  {
+    transform: {
+      id() {
+        return '42';
+      },
+    },
+  },
+);
+const morphedTransformResult = new Serializer({
+  adapter: arktypeAdapter,
+}).serialize(
+  {},
+  {
+    schema: morphedTransformSchema,
+  },
+);
+
+type TExpectedMorphedTransformResult = {
+  id?: number;
+};
+
+expectTypeOf(
+  morphedTransformResult,
+).toExtend<TExpectedMorphedTransformResult>();
+expectTypeOf<TExpectedMorphedTransformResult>().toExtend<
+  typeof morphedTransformResult
+>();
+
 createSchema(schema, {
   transform: {
-    // @ts-expect-error Transform keys must exist in the native schema output.
+    // @ts-expect-error Transform keys must exist in the native schema input.
     missing() {
       return 'invalid';
     },
   },
 });
+
+createSchema(
+  type({
+    id: 'string',
+  }),
+  {
+    transform: {
+      // @ts-expect-error Transform values must satisfy the native schema input.
+      id() {
+        return 1;
+      },
+    },
+  },
+);
 
 // @ts-expect-error Created schemas must wrap a supported object schema.
 createSchema(type('string'));

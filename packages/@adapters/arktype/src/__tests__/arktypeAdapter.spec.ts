@@ -254,7 +254,7 @@ describe('#ArkTypeAdapter', () => {
   });
 
   suite('when a created schema defines property transforms', () => {
-    it('transforms selected parsed properties with serialization context', () => {
+    it('transforms selected raw properties with serialization context', () => {
       const roleLabels = {
         en: {
           admin: 'Administrator',
@@ -265,17 +265,23 @@ describe('#ArkTypeAdapter', () => {
           member: 'Thành viên',
         },
       } as const;
+      interface IUserSource {
+        readonly id: string;
+        readonly password: string;
+        readonly role: 'admin' | 'member';
+      }
+
       const schema = createSchema(
         type({
           id: 'string',
-          role: "'admin' | 'member'",
+          role: 'string',
         }),
         {
           transform: {
-            role(data, context) {
+            role(data: Readonly<IUserSource>, context) {
               const locale = context?.['locale'] === 'vi' ? 'vi' : 'en';
 
-              return data.role ? roleLabels[locale][data.role] : undefined;
+              return roleLabels[locale][data.role];
             },
           },
         },
@@ -317,24 +323,29 @@ describe('#ArkTypeAdapter', () => {
       });
     });
 
-    it('provides every transform the same parsed pre-transform data', () => {
+    it('provides every transform the same raw pre-transform data', () => {
       const receivedData: Array<Readonly<object>> = [];
+      interface IAgeSource {
+        readonly age: string;
+        readonly id: string;
+      }
+
       const schema = createSchema(
         type({
-          age: 'string.numeric.parse',
+          age: 'number',
           id: 'string',
         }),
         {
           transform: {
-            id(data) {
+            id(data: Readonly<IAgeSource>) {
               receivedData.push(data);
 
-              return `${data.id}:${String(data.age)}`;
+              return `${data.id}:${data.age}`;
             },
-            age(data) {
+            age(data: Readonly<IAgeSource>) {
               receivedData.push(data);
 
-              return data.id;
+              return Number(data.age);
             },
           },
         },
@@ -353,18 +364,18 @@ describe('#ArkTypeAdapter', () => {
       );
 
       expect(result).toEqual({
-        age: 'user-1',
+        age: 30,
         id: 'user-1:30',
       });
       expect(receivedData).toHaveLength(2);
       expect(receivedData[0]).toBe(receivedData[1]);
       expect(receivedData[0]).toEqual({
-        age: 30,
+        age: '30',
         id: 'user-1',
       });
     });
 
-    it('skips transforms for omitted properties and removes undefined results', () => {
+    it('runs declared transforms before parsing even when properties are missing', () => {
       const idTransform = vi.fn(() => 'transformed-id');
       const nameTransform = vi.fn(() => 'transformed-name');
       const roleTransform = vi.fn(() => undefined);
@@ -394,18 +405,73 @@ describe('#ArkTypeAdapter', () => {
         },
       );
 
-      expect(result).toEqual({});
-      expect(idTransform).not.toHaveBeenCalled();
-      expect(nameTransform).not.toHaveBeenCalled();
-      expect(roleTransform).toHaveBeenCalledWith(
-        {
-          role: 'member',
-        },
-        undefined,
-      );
+      expect(result).toEqual({
+        id: 'transformed-id',
+        name: 'transformed-name',
+        role: 'member',
+      });
+      expect(idTransform).toHaveBeenCalledWith({ id: 1 }, undefined);
+      expect(nameTransform).toHaveBeenCalledWith({ id: 1 }, undefined);
+      expect(roleTransform).toHaveBeenCalledWith({ id: 1 }, undefined);
     });
 
-    it('applies created-schema transforms after a native root morph', () => {
+    it('parses transformed values through a native morph', () => {
+      const schema = createSchema(
+        type({
+          id: 'string.numeric.parse',
+        }),
+        {
+          transform: {
+            id() {
+              return '42';
+            },
+          },
+        },
+      );
+
+      const result = new Serializer({
+        adapter: arktypeAdapter,
+      }).serialize(
+        {},
+        {
+          schema,
+        },
+      );
+
+      expect(result).toEqual({
+        id: 42,
+      });
+    });
+
+    it('omits transformed values rejected by the output schema', () => {
+      const schema = createSchema(
+        type({
+          score: 'number > 0',
+        }),
+        {
+          transform: {
+            score() {
+              return -1;
+            },
+          },
+        },
+      );
+
+      const result = new Serializer({
+        adapter: arktypeAdapter,
+      }).serialize(
+        {
+          score: 10,
+        },
+        {
+          schema,
+        },
+      );
+
+      expect(result).toEqual({});
+    });
+
+    it('applies created-schema transforms before a native root morph', () => {
       const schema = createSchema(
         type({
           lastName: 'string',
@@ -417,8 +483,8 @@ describe('#ArkTypeAdapter', () => {
         }),
         {
           transform: {
-            fullName(data) {
-              return data.fullName?.toUpperCase();
+            firstName(data) {
+              return data.firstName?.toUpperCase();
             },
           },
         },
@@ -437,7 +503,61 @@ describe('#ArkTypeAdapter', () => {
       );
 
       expect(result).toEqual({
-        fullName: 'ALPHA CIFER',
+        fullName: 'ALPHA Cifer',
+      });
+    });
+
+    it('uses typed source-only properties without exposing them in output', () => {
+      interface IQuestionSource {
+        readonly title?: string;
+        readonly translations?: ReadonlyArray<{
+          readonly title?: string;
+          readonly locale?: string;
+        }>;
+      }
+
+      const schema = createSchema(
+        type({
+          title: 'string',
+        }),
+        {
+          transform: {
+            title(data: Readonly<IQuestionSource>, context) {
+              return (
+                data.translations?.find((translation) => {
+                  return translation.locale === context?.['locale'];
+                })?.title ?? ''
+              );
+            },
+          },
+        },
+      );
+
+      const result = new Serializer({
+        adapter: arktypeAdapter,
+      }).serialize(
+        {
+          translations: [
+            {
+              title: 'Hello',
+              locale: 'en',
+            },
+            {
+              title: 'Xin chào',
+              locale: 'vi',
+            },
+          ],
+        },
+        {
+          context: {
+            locale: 'vi',
+          },
+          schema,
+        },
+      );
+
+      expect(result).toEqual({
+        title: 'Xin chào',
       });
     });
   });

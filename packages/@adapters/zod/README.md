@@ -121,31 +121,37 @@ required but that the adapter may omit at runtime.
 
 ## Per-Property Transforms
 
-Use `createSchema` to replace selected top-level properties after Zod parsing.
-Each callback receives the same read-only partial parsed output and the current
-Eidora serialization context. Properties without callbacks keep their normal
-parsed values.
+Use `createSchema` to derive selected top-level properties from raw source data
+before Zod parses the output. Each callback receives the same read-only source
+object and the current Eidora serialization context. Properties without
+callbacks keep their raw values and pass through normal Zod parsing.
 
 ```ts
 import { Serializer } from '@eidora/core';
 import { createSchema, ZodAdapter } from '@eidora/zod';
 import { z } from 'zod';
 
+interface IUserSource {
+  readonly id: string;
+  readonly translations: ReadonlyArray<{
+    readonly locale: string;
+    readonly name: string;
+  }>;
+}
+
 const UserSchema = createSchema(
   z.object({
     id: z.string(),
-    role: z.enum(['admin', 'member']),
+    name: z.string(),
   }),
   {
     transform: {
-      role(data, context) {
-        if (!data.role) {
-          return undefined;
-        }
-
-        const locale = String(context?.['locale'] ?? 'en');
-
-        return `${locale}:${data.role}`;
+      name(data: Readonly<IUserSource>, context) {
+        return (
+          data.translations.find((translation) => {
+            return translation.locale === context?.['locale'];
+          })?.name ?? ''
+        );
       },
     },
   },
@@ -156,7 +162,16 @@ const result = new Serializer({
 }).serialize(
   {
     id: 'user-1',
-    role: 'admin',
+    translations: [
+      {
+        locale: 'en',
+        name: 'Alpha',
+      },
+      {
+        locale: 'vi',
+        name: 'An',
+      },
+    ],
   },
   {
     context: {
@@ -166,21 +181,22 @@ const result = new Serializer({
   },
 );
 
-// { id: 'user-1', role: 'vi:admin' }
+// { id: 'user-1', name: 'An' }
 ```
 
-Callbacks run only for properties present after parsing, including properties
-produced by defaults or fallbacks. Returning `undefined` omits the property.
-Missing or invalid properties remain omitted without invoking their callbacks.
-Native Zod transforms run first; Eidora's recursive key casing runs last.
+Every declared callback runs, even when its target property is absent from the
+source. Callback results are merged into a shallow source copy and then parsed
+by Zod. Unknown source properties such as `translations` are omitted, invalid
+callback results follow the adapter's normal lenient omission behavior, and
+native defaults run after callbacks. Returning `undefined` deletes the
+candidate property before parsing, so a native default may recreate it.
 
-In the example, only `role` is transformed. The unlisted `id` property keeps
-its normal parsed value. Callback data is partial because other properties may
-be missing or invalid, so callbacks must narrow values before using them.
-
-Calling `createSchema(NativeSchema)` without options, or omitting a property
-from `transform`, preserves normal adapter behavior. Transform callbacks are
-synchronous, and thrown errors propagate unchanged.
+Annotate callback data when a transform needs source-only properties. Without
+an annotation, callback data is typed as the partial native-schema input.
+Transform keys and return values must match native input properties. Native
+property and root transforms run after created-schema callbacks. Eidora's
+recursive key casing runs last. Callbacks are synchronous, and thrown errors
+propagate unchanged.
 
 ## Result Types
 
@@ -197,8 +213,8 @@ const result = new Serializer({
 // { id?: string; role?: string }
 ```
 
-Transformed properties use their callback return types. Untransformed
-properties retain their native Zod output types.
+The native Zod output owns every result property type, including transformed
+properties. Callback return values are validated before reaching the result.
 
 Eidora applies its configured recursive `camel`, `pascal`, or `snake` key
 transform after Zod serialization. Camel case remains the default.

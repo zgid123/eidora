@@ -60,22 +60,23 @@ type TExpectedMappedResult = {
 expectTypeOf(mappedResult).toExtend<TExpectedMappedResult>();
 expectTypeOf<TExpectedMappedResult>().toExtend<typeof mappedResult>();
 
+interface IContextAwareSource {
+  readonly age: string;
+  readonly id: string;
+  readonly localeLabel?: string;
+}
+
 const contextAwareSchema = createSchema(
   z.object({
-    age: z.coerce.number(),
-    id: z.string(),
+    age: z.number(),
+    id: z.object({
+      value: z.string(),
+    }),
   }),
   {
     transform: {
-      id(data, context) {
-        expectTypeOf(data).toEqualTypeOf<
-          Readonly<
-            Partial<{
-              age: number;
-              id: string;
-            }>
-          >
-        >();
+      id(data: Readonly<IContextAwareSource>, context) {
+        expectTypeOf(data).toEqualTypeOf<Readonly<IContextAwareSource>>();
         expectTypeOf(context).toEqualTypeOf<
           Readonly<Record<string, unknown>> | undefined
         >();
@@ -83,6 +84,9 @@ const contextAwareSchema = createSchema(
         return {
           value: `${data.id}:${String(context?.['locale'])}`,
         };
+      },
+      age(data: Readonly<IContextAwareSource>) {
+        return Number(data.age);
       },
     },
   },
@@ -128,14 +132,60 @@ const normallyCreatedResult = new Serializer({
 expectTypeOf(normallyCreatedResult).toExtend<TExpectedResult>();
 expectTypeOf<TExpectedResult>().toExtend<typeof normallyCreatedResult>();
 
+const coercedTransformSchema = createSchema(
+  z.object({
+    id: z.coerce.number(),
+  }),
+  {
+    transform: {
+      id() {
+        return '42';
+      },
+    },
+  },
+);
+const coercedTransformResult = new Serializer({
+  adapter,
+}).serialize(
+  {},
+  {
+    schema: coercedTransformSchema,
+  },
+);
+
+type TExpectedCoercedTransformResult = {
+  id?: number;
+};
+
+expectTypeOf(
+  coercedTransformResult,
+).toExtend<TExpectedCoercedTransformResult>();
+expectTypeOf<TExpectedCoercedTransformResult>().toExtend<
+  typeof coercedTransformResult
+>();
+
 createSchema(schema, {
   transform: {
-    // @ts-expect-error Transform keys must exist in the native schema output.
+    // @ts-expect-error Transform keys must exist in the native schema input.
     missing() {
       return 'invalid';
     },
   },
 });
+
+createSchema(
+  z.object({
+    id: z.string(),
+  }),
+  {
+    transform: {
+      // @ts-expect-error Transform values must satisfy the native schema input.
+      id() {
+        return 1;
+      },
+    },
+  },
+);
 
 // @ts-expect-error Created schemas must wrap a supported object schema.
 createSchema(z.string());

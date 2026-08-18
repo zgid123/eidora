@@ -1,5 +1,5 @@
 import type { TSerializeContext } from '@eidora/core';
-import type { output, ZodObject, ZodPipe, ZodTransform } from 'zod';
+import type { input, output, ZodObject, ZodPipe, ZodTransform } from 'zod';
 
 const createdSchemaBrand: unique symbol = Symbol('zodCreatedSchema');
 
@@ -10,68 +10,85 @@ export type TZodObjectTransform = ZodPipe<
 
 export type TZodSchema = ZodObject | TZodObjectTransform;
 
-export type TZodSchemaTransforms<TSchema extends TZodSchema> = Partial<{
-  readonly [TKey in keyof output<TSchema>]: (
-    data: Readonly<Partial<output<TSchema>>>,
+type TZodSchemaTransform<
+  TSchema extends TZodSchema,
+  TSource extends object,
+  TKey extends keyof input<TSchema>,
+> = {
+  bivarianceHack(
+    data: Readonly<TSource>,
     context?: TSerializeContext,
-  ) => unknown;
+  ): input<TSchema>[TKey] | undefined;
+}['bivarianceHack'];
+
+export type TZodSchemaTransforms<
+  TSchema extends TZodSchema,
+  TSource extends object = Partial<input<TSchema>>,
+> = Partial<{
+  readonly [TKey in keyof input<TSchema>]: TZodSchemaTransform<
+    TSchema,
+    TSource,
+    TKey
+  >;
 }>;
 
-export type TZodCreatedSchemaResult<
-  TSchema extends TZodSchema,
-  TTransforms extends TZodSchemaTransforms<TSchema>,
-> = Partial<{
-  [TKey in keyof output<TSchema>]: TKey extends keyof TTransforms
-    ? NonNullable<TTransforms[TKey]> extends (...args: never[]) => infer TResult
-      ? TResult
-      : output<TSchema>[TKey]
-    : output<TSchema>[TKey];
-}>;
+export type TZodCreatedSchemaResult<TSchema extends TZodSchema> = Partial<
+  output<TSchema>
+>;
 
 export interface ICreateSchemaOptions<
   TSchema extends TZodSchema,
-  TTransforms extends TZodSchemaTransforms<TSchema>,
+  TSource extends object = Partial<input<TSchema>>,
 > {
-  readonly transform?: TTransforms;
+  readonly transform?: TZodSchemaTransforms<TSchema, TSource>;
 }
 
-export interface IZodCreatedSchema<
-  TSchema extends TZodSchema = TZodSchema,
-  TTransforms extends TZodSchemaTransforms<TSchema> =
-    TZodSchemaTransforms<TSchema>,
-> {
+export interface IZodCreatedSchema<TSchema extends TZodSchema = TZodSchema> {
   readonly [createdSchemaBrand]: true;
   readonly schema: TSchema;
-  readonly transform: TTransforms;
+  readonly transform: TZodSchemaTransforms<TSchema>;
+}
+
+export interface IZodCreatedSchemaRuntime {
+  readonly [createdSchemaBrand]: true;
+  readonly schema: TZodSchema;
+  readonly transform: Readonly<Record<string, unknown>>;
 }
 
 interface IApplyZodSchemaTransformsParams {
   readonly data: object;
-  readonly schema: IZodCreatedSchema;
+  readonly schema: IZodCreatedSchemaRuntime;
   readonly context?: TSerializeContext;
 }
 
-export function createSchema<
-  TSchema extends TZodSchema,
-  const TTransforms extends TZodSchemaTransforms<TSchema> = {},
->(
+interface ICreateSchema {
+  <TSchema extends TZodSchema>(
+    schema: TSchema,
+    options?: ICreateSchemaOptions<TSchema, Partial<input<TSchema>>>,
+  ): IZodCreatedSchema<TSchema>;
+
+  <TSchema extends TZodSchema, TSource extends object>(
+    schema: TSchema,
+    options: ICreateSchemaOptions<TSchema, TSource>,
+  ): IZodCreatedSchema<TSchema>;
+}
+
+function createSchemaImplementation<TSchema extends TZodSchema>(
   schema: TSchema,
-  {
-    transform,
-  }: ICreateSchemaOptions<TSchema, TTransforms> & {
-    readonly transform?: TZodSchemaTransforms<TSchema>;
-  } = {},
-): IZodCreatedSchema<TSchema, TTransforms> {
+  { transform }: ICreateSchemaOptions<TSchema> = {},
+): IZodCreatedSchema<TSchema> {
   return {
     schema,
-    transform: transform ?? ({} as TTransforms),
+    transform: transform ?? {},
     [createdSchemaBrand]: true,
   };
 }
 
+export const createSchema = createSchemaImplementation as ICreateSchema;
+
 export function isZodCreatedSchema(
   schema: unknown,
-): schema is IZodCreatedSchema {
+): schema is IZodCreatedSchemaRuntime {
   return (
     typeof schema === 'object' &&
     schema !== null &&
@@ -85,17 +102,17 @@ export function applyZodSchemaTransforms({
   schema,
   context,
 }: IApplyZodSchemaTransformsParams): Record<string, unknown> {
-  const parsedData = data as Readonly<Record<string, unknown>>;
+  const sourceData = data as Readonly<Record<string, unknown>>;
   const result = {
-    ...parsedData,
+    ...sourceData,
   };
 
   for (const [key, transform] of Object.entries(schema.transform)) {
-    if (!Object.hasOwn(parsedData, key) || typeof transform !== 'function') {
+    if (typeof transform !== 'function') {
       continue;
     }
 
-    const transformedValue = transform(parsedData, context);
+    const transformedValue = transform(sourceData, context);
 
     if (transformedValue === undefined) {
       delete result[key];
