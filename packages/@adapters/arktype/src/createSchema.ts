@@ -4,70 +4,89 @@ const createdSchemaBrand: unique symbol = Symbol('arkTypeCreatedSchema');
 
 export interface IArkTypeSchema {
   readonly infer: object;
+  readonly inferIn: object;
 }
 
-export type TArkTypeSchemaTransforms<TSchema extends IArkTypeSchema> = Partial<{
-  readonly [TKey in keyof TSchema['infer']]: (
-    data: Readonly<Partial<TSchema['infer']>>,
+type TArkTypeSchemaTransform<
+  TSchema extends IArkTypeSchema,
+  TSource extends object,
+  TKey extends keyof TSchema['inferIn'],
+> = {
+  bivarianceHack(
+    data: Readonly<TSource>,
     context?: TSerializeContext,
-  ) => unknown;
+  ): TSchema['inferIn'][TKey] | undefined;
+}['bivarianceHack'];
+
+export type TArkTypeSchemaTransforms<
+  TSchema extends IArkTypeSchema,
+  TSource extends object = Partial<TSchema['inferIn']>,
+> = Partial<{
+  readonly [TKey in keyof TSchema['inferIn']]: TArkTypeSchemaTransform<
+    TSchema,
+    TSource,
+    TKey
+  >;
 }>;
 
-export type TArkTypeCreatedSchemaResult<
-  TSchema extends IArkTypeSchema,
-  TTransforms extends TArkTypeSchemaTransforms<TSchema>,
-> = Partial<{
-  [TKey in keyof TSchema['infer']]: TKey extends keyof TTransforms
-    ? NonNullable<TTransforms[TKey]> extends (...args: never[]) => infer TResult
-      ? TResult
-      : TSchema['infer'][TKey]
-    : TSchema['infer'][TKey];
-}>;
+export type TArkTypeCreatedSchemaResult<TSchema extends IArkTypeSchema> =
+  Partial<TSchema['infer']>;
 
 export interface ICreateSchemaOptions<
   TSchema extends IArkTypeSchema,
-  TTransforms extends TArkTypeSchemaTransforms<TSchema>,
+  TSource extends object = Partial<TSchema['inferIn']>,
 > {
-  readonly transform?: TTransforms;
+  readonly transform?: TArkTypeSchemaTransforms<TSchema, TSource>;
 }
 
 export interface IArkTypeCreatedSchema<
   TSchema extends IArkTypeSchema = IArkTypeSchema,
-  TTransforms extends TArkTypeSchemaTransforms<TSchema> =
-    TArkTypeSchemaTransforms<TSchema>,
 > {
   readonly [createdSchemaBrand]: true;
   readonly schema: TSchema;
-  readonly transform: TTransforms;
+  readonly transform: TArkTypeSchemaTransforms<TSchema>;
+}
+
+export interface IArkTypeCreatedSchemaRuntime {
+  readonly [createdSchemaBrand]: true;
+  readonly schema: IArkTypeSchema;
+  readonly transform: Readonly<Record<string, unknown>>;
 }
 
 interface IApplyArkTypeSchemaTransformsParams {
   readonly data: object;
-  readonly schema: IArkTypeCreatedSchema;
+  readonly schema: IArkTypeCreatedSchemaRuntime;
   readonly context?: TSerializeContext;
 }
 
-export function createSchema<
-  TSchema extends IArkTypeSchema,
-  const TTransforms extends TArkTypeSchemaTransforms<TSchema> = {},
->(
+interface ICreateSchema {
+  <TSchema extends IArkTypeSchema>(
+    schema: TSchema,
+    options?: ICreateSchemaOptions<TSchema, Partial<TSchema['inferIn']>>,
+  ): IArkTypeCreatedSchema<TSchema>;
+
+  <TSchema extends IArkTypeSchema, TSource extends object>(
+    schema: TSchema,
+    options: ICreateSchemaOptions<TSchema, TSource>,
+  ): IArkTypeCreatedSchema<TSchema>;
+}
+
+function createSchemaImplementation<TSchema extends IArkTypeSchema>(
   schema: TSchema,
-  {
-    transform,
-  }: ICreateSchemaOptions<TSchema, TTransforms> & {
-    readonly transform?: TArkTypeSchemaTransforms<TSchema>;
-  } = {},
-): IArkTypeCreatedSchema<TSchema, TTransforms> {
+  { transform }: ICreateSchemaOptions<TSchema> = {},
+): IArkTypeCreatedSchema<TSchema> {
   return {
     schema,
-    transform: transform ?? ({} as TTransforms),
+    transform: transform ?? {},
     [createdSchemaBrand]: true,
   };
 }
 
+export const createSchema = createSchemaImplementation as ICreateSchema;
+
 export function isArkTypeCreatedSchema(
   schema: unknown,
-): schema is IArkTypeCreatedSchema {
+): schema is IArkTypeCreatedSchemaRuntime {
   return (
     typeof schema === 'object' &&
     schema !== null &&
@@ -81,17 +100,17 @@ export function applyArkTypeSchemaTransforms({
   schema,
   context,
 }: IApplyArkTypeSchemaTransformsParams): Record<string, unknown> {
-  const parsedData = data as Readonly<Record<string, unknown>>;
+  const sourceData = data as Readonly<Record<string, unknown>>;
   const result = {
-    ...parsedData,
+    ...sourceData,
   };
 
   for (const [key, transform] of Object.entries(schema.transform)) {
-    if (!Object.hasOwn(parsedData, key) || typeof transform !== 'function') {
+    if (typeof transform !== 'function') {
       continue;
     }
 
-    const transformedValue = transform(parsedData, context);
+    const transformedValue = transform(sourceData, context);
 
     if (transformedValue === undefined) {
       delete result[key];

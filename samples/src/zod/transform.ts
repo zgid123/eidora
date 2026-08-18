@@ -2,32 +2,27 @@ import { Serializer } from '@eidora/core';
 import { createSchema, ZodAdapter } from '@eidora/zod';
 import { z } from 'zod';
 
-const ROLE_LABELS = {
-  en: {
-    admin: 'Administrator',
-    member: 'Member',
-  },
-  vi: {
-    admin: 'Quản trị viên',
-    member: 'Thành viên',
-  },
-} as const;
+interface IUserSource {
+  readonly id: string;
+  readonly translations: ReadonlyArray<{
+    readonly locale: string;
+    readonly name: string;
+  }>;
+}
 
 const UserSchema = createSchema(
   z.object({
     id: z.string(),
-    role: z.enum(['admin', 'member']),
+    name: z.string(),
   }),
   {
     transform: {
-      role(data, context) {
-        if (!data.role) {
-          return undefined;
-        }
-
-        const locale = context?.['locale'] === 'vi' ? 'vi' : 'en';
-
-        return ROLE_LABELS[locale][data.role];
+      name(data: Readonly<IUserSource>, context) {
+        return (
+          data.translations.find((translation) => {
+            return translation.locale === context?.['locale'];
+          })?.name ?? ''
+        );
       },
     },
   },
@@ -39,7 +34,16 @@ const result = new Serializer({
   {
     id: 'user-1',
     password: 'secret',
-    role: 'admin',
+    translations: [
+      {
+        locale: 'en',
+        name: 'Alpha',
+      },
+      {
+        locale: 'vi',
+        name: 'An',
+      },
+    ],
   },
   {
     context: {
@@ -49,5 +53,5 @@ const result = new Serializer({
   },
 );
 
-// { id: 'user-1', role: 'Quản trị viên' }
+// { id: 'user-1', name: 'An' }
 console.log(result);

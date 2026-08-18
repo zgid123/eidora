@@ -8,24 +8,21 @@ import { type, Type } from 'arktype';
 import {
   applyArkTypeSchemaTransforms,
   isArkTypeCreatedSchema,
-  type IArkTypeCreatedSchema,
+  type IArkTypeCreatedSchemaRuntime,
   type IArkTypeSchema,
   type TArkTypeCreatedSchemaResult,
-  type TArkTypeSchemaTransforms,
 } from './createSchema';
 
-type TArkTypeAdapterSchema = IArkTypeSchema | IArkTypeCreatedSchema;
+type TArkTypeAdapterSchema = IArkTypeSchema | IArkTypeCreatedSchemaRuntime;
 
-type TArkTypeAdapterResult<TSchema> = TSchema extends IArkTypeCreatedSchema
-  ? TSchema['schema'] extends infer TCreatedSchema extends IArkTypeSchema
-    ? TSchema['transform'] extends infer TTransforms extends
-        TArkTypeSchemaTransforms<TCreatedSchema>
-      ? TArkTypeCreatedSchemaResult<TCreatedSchema, TTransforms>
+type TArkTypeAdapterResult<TSchema> =
+  TSchema extends IArkTypeCreatedSchemaRuntime
+    ? TSchema['schema'] extends infer TCreatedSchema extends IArkTypeSchema
+      ? TArkTypeCreatedSchemaResult<TCreatedSchema>
       : never
-    : never
-  : TSchema extends IArkTypeSchema
-    ? Partial<TSchema['infer']>
-    : never;
+    : TSchema extends IArkTypeSchema
+      ? Partial<TSchema['infer']>
+      : never;
 
 interface IArkTypePropertyType {
   (data: unknown): unknown;
@@ -100,11 +97,16 @@ export class ArkTypeAdapter implements IAdapter<
     schema,
   }: IAdapterSerializeParams<TSchema>): TArkTypeAdapterResult<TSchema> {
     if (isArkTypeCreatedSchema(schema)) {
-      return applyArkTypeSchemaTransforms({
-        context,
+      const transformedData = applyArkTypeSchemaTransforms({
+        data,
         schema,
-        data: this.#serializeSchema(data, schema.schema),
-      }) as TArkTypeAdapterResult<TSchema>;
+        context,
+      });
+
+      return this.#serializeSchema(
+        transformedData,
+        schema.schema,
+      ) as TArkTypeAdapterResult<TSchema>;
     }
 
     return this.#serializeSchema(
