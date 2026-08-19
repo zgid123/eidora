@@ -298,14 +298,14 @@ describe('Serializer', () => {
     });
   });
 
-  it('maps a field from the raw data and serialization context', () => {
+  it('transforms a field from the raw data and serialization context', () => {
     class GreetingViewModel {
       greeting!: string;
     }
 
     const metadata: DecoratorMetadata = {};
     Field({
-      map(data, context) {
+      transform(data, context) {
         return `${Reflect.get(data, 'name')}, ${context?.['greeting']}`;
       },
     })(

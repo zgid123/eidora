@@ -79,11 +79,11 @@ limitations.
 
 ## Packages
 
-| Package                                           | Description                                                                                |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`@eidora/core`](./packages/core)                 | View-model decorators, field mapping, serialization context, and recursive key transforms. |
-| [`@eidora/arktype`](./packages/@adapters/arktype) | ArkType object-schema validation and serialization through the core adapter API.           |
-| [`@eidora/zod`](./packages/@adapters/zod)         | Zod object-schema validation and serialization through the core adapter API.               |
+| Package                                           | Description                                                                                   |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [`@eidora/core`](./packages/core)                 | View-model decorators, field transforms, serialization context, and recursive key transforms. |
+| [`@eidora/arktype`](./packages/@adapters/arktype) | ArkType object-schema validation and serialization through the core adapter API.              |
+| [`@eidora/zod`](./packages/@adapters/zod)         | Zod object-schema validation and serialization through the core adapter API.                  |
 
 ## Repository
 
