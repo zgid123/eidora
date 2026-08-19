@@ -1,6 +1,6 @@
 {
   "name": "@eidora/hono-zod-middleware",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Zod Middleware for Eidora.",
   "type": "module",
   "imports": {

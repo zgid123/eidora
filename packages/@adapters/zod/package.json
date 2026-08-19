@@ -1,6 +1,6 @@
 {
   "name": "@eidora/zod",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Zod schema adapter for Eidora.",
   "type": "module",
   "imports": {

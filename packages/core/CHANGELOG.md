@@ -1,5 +1,12 @@
 # @eidora/core
 
+## 0.0.3
+
+### Patch Changes
+
+- [#13](https://github.com/zgid123/eidora/pull/13) [`7a02061`](https://github.com/zgid123/eidora/commit/7a02061438f1f6b334f1db31ba34d5c6596e2593) Thanks [@zgid123](https://github.com/zgid123)! - Rename the `@Field` computed-value option from `map` to `transform` for
+  consistent per-property transform terminology.
+
 ## 0.0.2
 
 ### Patch Changes

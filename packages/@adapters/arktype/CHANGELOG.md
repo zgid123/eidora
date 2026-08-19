@@ -1,5 +1,15 @@
 # @eidora/arktype
 
+## 0.0.3
+
+### Patch Changes
+
+- [#11](https://github.com/zgid123/eidora/pull/11) [`adcbae0`](https://github.com/zgid123/eidora/commit/adcbae074e2a0f97d4658626fd472ec0074069c7) Thanks [@zgid123](https://github.com/zgid123)! - Run created-schema property transforms against raw source data before native
+  output parsing, with explicit callback annotations for typed source-only
+  properties while preserving the existing `createSchema(schema, options)` API.
+- Updated dependencies [[`7a02061`](https://github.com/zgid123/eidora/commit/7a02061438f1f6b334f1db31ba34d5c6596e2593)]:
+  - @eidora/core@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
