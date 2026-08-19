@@ -1,4 +1,4 @@
-import { Field, ViewModel } from '../decorators';
+import { Field, type IFieldOptions, ViewModel } from '../decorators';
 import { Serializer } from '../serializer';
 
 @ViewModel()
@@ -10,7 +10,7 @@ class UserViewModel {
   age!: number;
 
   @Field({
-    map(data: { readonly name: string }, context) {
+    transform(data: { readonly name: string }, context) {
       expectTypeOf(data).toEqualTypeOf<{ readonly name: string }>();
       expectTypeOf(context).toEqualTypeOf<
         Readonly<Record<string, unknown>> | undefined
@@ -21,6 +21,17 @@ class UserViewModel {
   })
   displayName!: string;
 }
+
+const legacyFieldOptions: IFieldOptions<{ readonly name: string }> = {
+  // @ts-expect-error Field callbacks use transform instead of map.
+  map(data: { readonly name: string }) {
+    return data.name;
+  },
+};
+
+expectTypeOf(legacyFieldOptions).toEqualTypeOf<
+  IFieldOptions<{ readonly name: string }>
+>();
 
 const serializer = new Serializer();
 new Serializer({

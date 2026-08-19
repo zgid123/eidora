@@ -48,11 +48,11 @@ const result = new Serializer().serialize(user, {
 
 Undecorated properties are omitted. The source object is not mutated.
 
-## Computed Fields and Context
+## Transformed Fields and Context
 
-A field mapper receives the complete source object and optional read-only
+A field transform receives the complete source object and optional read-only
 serialization context. Supply its source type to `Field` for strongly typed
-mapping:
+transformation:
 
 ```ts
 interface IUser {
@@ -67,7 +67,7 @@ class UserViewModel {
   id!: string;
 
   @Field<IUser>({
-    map(user, context) {
+    transform(user, context) {
       const separator = context?.['separator'];
 
       return [user.firstName, user.lastName].join(
@@ -187,10 +187,10 @@ id!: string;
 
 Accepts these options:
 
-| Option | Type                          | Description                                                           |
-| ------ | ----------------------------- | --------------------------------------------------------------------- |
-| `name` | `string`                      | Output name before key transformation.                                |
-| `map`  | `(data, context?) => unknown` | Computes the field value from the source object and optional context. |
+| Option      | Type                          | Description                                                           |
+| ----------- | ----------------------------- | --------------------------------------------------------------------- |
+| `name`      | `string`                      | Output name before key transformation.                                |
+| `transform` | `(data, context?) => unknown` | Computes the field value from the source object and optional context. |
 
 Private, static, and symbol-keyed fields cannot be decorated with `@Field`.
 

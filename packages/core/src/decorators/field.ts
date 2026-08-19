@@ -3,7 +3,7 @@ import { registerViewModelField } from '../registries';
 
 export interface IFieldOptions<TData extends object = object> {
   readonly name?: string;
-  readonly map?: (data: TData, context?: TSerializeContext) => unknown;
+  readonly transform?: (data: TData, context?: TSerializeContext) => unknown;
 }
 
 interface IFieldDecorator {
@@ -66,8 +66,8 @@ function decorateField<TThis extends object, TValue, TData extends object>(
     name: options.name ?? propertyName,
     propertyName,
     get(data, serializeContext): unknown {
-      if (options.map) {
-        return options.map(data as TData, serializeContext);
+      if (options.transform) {
+        return options.transform(data as TData, serializeContext);
       }
 
       return getValue(data as TThis);

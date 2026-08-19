@@ -13,7 +13,7 @@ class UserViewModel {
   id!: string;
 
   @Field({
-    map(user: IUser, context) {
+    transform(user: IUser, context) {
       const separator = context?.['separator'];
 
       return [user.firstName, user.lastName].join(
