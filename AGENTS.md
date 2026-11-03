@@ -15,7 +15,9 @@ configuration, Vitest, tsdown, Oxc tooling, and Turbo.
 - `samples`: Buildable examples that consume workspace packages through their
   public APIs.
 - `specs`: Numbered technical specifications and design decisions.
-- `.agents/skills`: Repository-specific TypeScript and testing instructions.
+- `skills`: Consumer-facing agent skills pulled by external projects.
+- `.agents/skills`: Repository-specific agent skills (`typescript`, `testing`,
+  `skill-creator`).
 - `.github`: CI, release workflows, and shared GitHub Actions.
 
 Generated `lib` directories and dependency directories are build artifacts. Do
@@ -28,6 +30,8 @@ not edit them directly.
   only load the reference pages relevant to the task.
 - For test changes, also follow `.agents/skills/testing/SKILL.md` and its
   relevant Vitest reference pages.
+- For authoring, evaluating, or improving agent skills, also follow
+  `.agents/skills/skill-creator/SKILL.md`.
 - A more deeply nested `AGENTS.md`, if introduced later, takes precedence for
   files in its directory tree.
 
@@ -92,6 +96,17 @@ not edit them directly.
   cannot verify a type contract.
 - Add a regression test for every bug fix.
 - Avoid snapshots for small structured values; prefer direct assertions.
+
+## Agent Skills
+
+- Keep repository-specific developer skills in `.agents/skills` (`typescript`,
+  `testing`, `skill-creator`).
+- Keep public consumer skills in `skills/` (for example, `skills/eidora`).
+- Validate skill metadata and frontmatter with
+  `python3 .agents/skills/skill-creator/scripts/quick_validate.py <skill-path>`.
+- Format skills with `pnpm exec oxfmt skills`.
+- Follow `.agents/skills/typescript/SKILL.md` formatting rules for code snippets
+  in skill files (including multiline objects with trailing commas).
 
 ## Validation Commands
 

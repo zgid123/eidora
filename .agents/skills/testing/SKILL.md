@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Guidelines for writing deterministic unit, integration, and end-to-end tests for Alpha's projects. Use when creating, reviewing, or refactoring automated tests, test data factories, Vitest suites, integration tests, or E2E tests.
+description: Guidelines for writing deterministic unit, integration, and end-to-end tests for Alpha's projects. Always use when creating, modifying, reviewing, or fixing tests, Vitest suites, test data factories (fishery, faker), mocks, or fakes. Enforces behavior-focused tests, in-memory fakes over mocks, and the mandatory rule that controllers, adapters, and route handlers must always use E2E tests (*.e2e.ts), never integration tests.
 ---
 
 # Purpose

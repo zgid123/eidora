@@ -19,9 +19,9 @@ End‑to‑end (E2E) tests exercise the system as a whole through its public int
 ```ts
 import { HonoTest, serializeData } from '@alphacifer/hono/testing';
 
-import { initHono, type TApp } from '~/adapters/restful';
-import { BookEntity } from '~/domain/book';
-import type { TBook } from '~/infrastructure/drizzle/schemas/books';
+import { initHono, type TApp } from '#/adapters/restful';
+import { BookEntity } from '#/domain/book';
+import type { TBook } from '#/infrastructure/drizzle/schemas/books';
 
 import { drizzle } from '../../../../config/drizzle';
 import { bookFactory } from '../../../../factories/drizzle/BookFactory';

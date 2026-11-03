@@ -11,17 +11,23 @@
       "sourceType": "github",
       "computedHash": "8201539061750aec3e6821a5933656597a6cc477eb20fcbfc76c0d33ac42f52b"
     },
+    "skill-creator": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "computedHash": "5ea13a6d9f0d4bb694405d79acd00cadec0d21bb138c4dd10fcf3c500cb835c2"
+    },
     "testing": {
       "source": "zgid123/skills",
       "sourceType": "github",
       "skillPath": "skills/testing/SKILL.md",
-      "computedHash": "37d07a193bfce8f05c54350c3f519132ab36cad38337db176e00950e44cdca32"
+      "computedHash": "8938fce27ba4d54aa4b6bb9a94539dc628940fa2e07a93c94c747300fc706229"
     },
     "typescript": {
       "source": "zgid123/skills",
       "sourceType": "github",
       "skillPath": "skills/typescript/SKILL.md",
-      "computedHash": "bd4723d34a96312ceefc63c68932ba54f19b435e39d05e5fa42c4e698153efba"
+      "computedHash": "ee4c4f69544599b8b08785b80aac8076eaf19003b21e3e573db8444f6ecc9f45"
     }
   }
 }

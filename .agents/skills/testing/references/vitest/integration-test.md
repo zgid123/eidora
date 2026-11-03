@@ -16,9 +16,9 @@ Integration tests verify how multiple modules work together (for example reposit
 ```ts
 import { eq } from '@alphacifer/drizzle/core';
 
-import { BookEntity, BookTranslationEntity } from '~/domain/book';
-import { BookRepositoryV1 } from '~/infrastructure/drizzle/repositories/book/BookRepositoryV1';
-import { books, type TBook, type TBookTranslation } from '~/infrastructure/drizzle/schemas/books';
+import { BookEntity, BookTranslationEntity } from '#/domain/book';
+import { BookRepositoryV1 } from '#/infrastructure/drizzle/repositories/book/BookRepositoryV1';
+import { books, type TBook, type TBookTranslation } from '#/infrastructure/drizzle/schemas/books';
 
 import { drizzle } from '../../../../config/drizzle';
 import { bookFactory, bookTranslationFactory } from '../../../../factories/drizzle/BookFactory';
