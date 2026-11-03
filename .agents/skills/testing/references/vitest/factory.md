@@ -13,9 +13,13 @@ Use `fishery` and `@faker-js/faker` to create reusable, realistic test data for 
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { Book } from '@db/models';
+interface IBook {
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-class BookFactory extends Factory<Book> {
+class BookFactory extends Factory<IBook> {
   trait(): this {
     return this.params({
       // property for this trait
@@ -42,7 +46,7 @@ export const bookFactory = BookFactory.define(({ params, onCreate }) => {
     createdAt,
     updatedAt,
     ...book,
-  } as Book;
+  };
 });
 ```
 
@@ -51,9 +55,9 @@ export const bookFactory = BookFactory.define(({ params, onCreate }) => {
 Factory boilerplate for Drizzle ORM entities, using a test schema.
 
 ```ts
-// src/infrastructure/drizzle/schemas/book.ts
+// src/infrastructure/drizzle/schemas/books.ts
 import { relations } from '@alphacifer/drizzle/core';
-import { pgTable, varchar } from '@alphacifer/drizzle/pg';
+import { bigint, pgTable, timestamp, varchar } from '@alphacifer/drizzle/pg';
 
 export const books = pgTable('books', {
   id: bigint({
@@ -76,7 +80,7 @@ export const books = pgTable('books', {
   type: varchar().notNull(),
 });
 
-export const booksRelations = relations(books, ({ many }) => {
+export const booksRelations = relations(books, () => {
   return {};
 });
 
@@ -91,7 +95,7 @@ import { testSchema } from '@alphacifer/drizzle/testing';
 import { faker } from '@faker-js/faker';
 import { Factory } from 'fishery';
 
-import { books, type TBook } from '~/infrastructure/drizzle/schemas/books';
+import { books, type TBook } from '#/infrastructure/drizzle/schemas/books';
 
 import { drizzle } from '../../config/drizzle';
 
@@ -106,23 +110,58 @@ class BookFactory extends Factory<TBook> {
 export const bookFactory = BookFactory.define(({ params, onCreate }) => {
   onCreate(async (book) => {
     await drizzle.$client.query(`SET search_path TO ${testSchema}`);
-    const [insertedBook] = await drizzle.insert(books).values(book).returning();
+    const [insertedBook] = await drizzle
+      .insert(books)
+      .values({
+        type: book.type,
+        title: book.title,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+      })
+      .returning();
 
     return insertedBook;
   });
 
   const {
+    id = BigInt(faker.number.int({ min: 1, max: 10_000 })),
     title = faker.book.title(),
+    type = 'General',
     createdAt = new Date(),
     updatedAt = new Date(),
     ...book
   } = params;
 
   return {
+    id,
     title,
+    type,
     createdAt,
     updatedAt,
     ...book,
-  } as TBook;
+  };
+});
+
+export interface IBookTranslation {
+  id: bigint;
+  bookId: bigint;
+  locale: string;
+  title: string;
+}
+
+export const bookTranslationFactory = Factory.define<IBookTranslation>(({ params }) => {
+  const {
+    id = BigInt(faker.number.int({ min: 1, max: 10_000 })),
+    bookId = BigInt(1),
+    locale = 'en',
+    title = faker.book.title(),
+  } = params;
+
+  return {
+    id,
+    bookId,
+    locale,
+    title,
+  };
 });
 ```
